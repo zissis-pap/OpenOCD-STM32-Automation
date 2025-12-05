@@ -1,6 +1,6 @@
 # OpenOCD Python Flasher
 
-Version: 0.003
+Version: 0.004
 
 A modular Python application for managing OpenOCD connections and performing common embedded development operations on STM32 microcontrollers.
 
@@ -20,6 +20,7 @@ A modular Python application for managing OpenOCD connections and performing com
 - Telnet connection to OpenOCD
 - Interactive menu-driven interface
 - Support for 15 STM32 MCU families
+- Automatic command retry with halt checking (up to 3 attempts)
 - Common operations:
   - Halt/Reset MCU
   - Erase flash memory
@@ -119,6 +120,22 @@ After selecting your target, you'll see an interactive menu with the following o
 10. **Send Custom Command** - Send any OpenOCD command
 11. **Reconnect to OpenOCD** - Reconnect telnet session
 12. **Exit** - Clean up and exit
+
+### Automatic Halt Check and Retry Logic
+
+The script provides robust error handling for operations that require the MCU to be halted:
+
+**Pre-command Halt Check:**
+- Before executing flash operations, memory writes, or verification, the script checks if the MCU is halted
+- If not halted, it displays: `MCU not halted, attempting to halt...` and halts it automatically
+- This prevents common errors like `"Target not halted\nfailed erasing sectors 0 to 127"`
+
+**Automatic Retry Logic:**
+- If a command fails, it automatically retries up to 3 times
+- Displays: `Command failed, retrying (2/3)...`
+- Before each retry, the script checks if the MCU is halted and halts it if needed
+- Detects OpenOCD failure patterns like "failed", "error", "target not halted", "unable to", etc.
+- This improves reliability when working with unstable connections or busy targets
 
 ## Example Workflow
 

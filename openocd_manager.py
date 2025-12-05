@@ -100,8 +100,8 @@ class OpenOCDManager:
         self.buffer = b""
         return result
 
-    def send_command(self, command):
-        """Send command to OpenOCD and return response"""
+    def _send_command_raw(self, command):
+        """Send command to OpenOCD without retry logic"""
         if not self.connected:
             print("Not connected to OpenOCD")
             return None
@@ -116,10 +116,85 @@ class OpenOCDManager:
             print(f"Error sending command: {e}")
             return None
 
+    def _check_if_halted(self):
+        """Check if MCU is halted"""
+        # Try to read a register - this will indicate if target is halted
+        response = self._send_command_raw("targets")
+        if response:
+            response_lower = response.lower()
+            # Check for halted state indicators
+            if "halted" in response_lower:
+                return True
+            # If it says "running", it's definitely not halted
+            if "running" in response_lower:
+                return False
+
+        # If unclear, assume not halted to be safe
+        return False
+
+    def _ensure_halted(self):
+        """Ensure MCU is halted, halt it if not"""
+        if not self._check_if_halted():
+            print("MCU not halted, attempting to halt...")
+            self._send_command_raw("halt")
+            time.sleep(0.5)
+
+    def _is_command_failed(self, response):
+        """Check if OpenOCD command failed based on response"""
+        if response is None:
+            return True
+
+        response_lower = response.lower()
+
+        # Common OpenOCD failure indicators
+        failure_patterns = [
+            "failed",
+            "error",
+            "target not halted",
+            "unable to",
+            "cannot",
+            "invalid"
+        ]
+
+        for pattern in failure_patterns:
+            if pattern in response_lower:
+                return True
+
+        return False
+
+    def send_command(self, command, max_retries=3, check_halt=True):
+        """Send command to OpenOCD with retry logic
+
+        Args:
+            command: The OpenOCD command to send
+            max_retries: Maximum number of retry attempts (default: 3)
+            check_halt: Whether to check and ensure MCU is halted before retry (default: True)
+        """
+        for attempt in range(max_retries):
+            response = self._send_command_raw(command)
+
+            # Check if command succeeded
+            if not self._is_command_failed(response):
+                return response
+
+            # Command failed
+            if attempt < max_retries - 1:  # Don't retry on last attempt
+                print(f"Command failed, retrying ({attempt + 2}/{max_retries})...")
+
+                # Check if MCU is halted before retrying (except for halt/reset commands)
+                if check_halt and command not in ["halt", "reset halt", "reset run"]:
+                    self._ensure_halted()
+
+                time.sleep(0.5)  # Brief delay before retry
+            else:
+                print(f"Command failed after {max_retries} attempts")
+
+        return response
+
     def halt(self):
         """Halt the MCU"""
         print("Halting MCU...")
-        response = self.send_command("halt")
+        response = self.send_command("halt", check_halt=False)
         if response:
             print(response)
         return response
@@ -127,7 +202,7 @@ class OpenOCDManager:
     def reset_halt(self):
         """Reset and halt the MCU"""
         print("Resetting and halting MCU...")
-        response = self.send_command("reset halt")
+        response = self.send_command("reset halt", check_halt=False)
         if response:
             print(response)
         return response
@@ -135,7 +210,7 @@ class OpenOCDManager:
     def reset_run(self):
         """Reset and run the MCU"""
         print("Resetting and running MCU...")
-        response = self.send_command("reset run")
+        response = self.send_command("reset run", check_halt=False)
         if response:
             print(response)
         return response
@@ -143,6 +218,8 @@ class OpenOCDManager:
     def erase_flash(self):
         """Erase flash memory"""
         print("Erasing flash memory...")
+        # Ensure MCU is halted before erasing
+        self._ensure_halted()
         response = self.send_command("flash erase_sector 0 0 last")
         if response:
             print(response)
@@ -155,7 +232,8 @@ class OpenOCDManager:
             return None
 
         print(f"Flashing firmware: {firmware_path}")
-        self.halt()
+        # Ensure MCU is halted before flashing
+        self._ensure_halted()
         response = self.send_command(f"program {firmware_path} verify reset")
         if response:
             print(response)
@@ -168,6 +246,8 @@ class OpenOCDManager:
             return None
 
         print(f"Verifying firmware: {firmware_path}")
+        # Ensure MCU is halted before verifying
+        self._ensure_halted()
         response = self.send_command(f"verify_image {firmware_path}")
         if response:
             print(response)
@@ -184,6 +264,8 @@ class OpenOCDManager:
     def write_memory(self, address, value):
         """Write value to memory address"""
         print(f"Writing 0x{value:08x} to address 0x{address:08x}...")
+        # Ensure MCU is halted before writing to memory
+        self._ensure_halted()
         response = self.send_command(f"mww 0x{address:08x} 0x{value:08x}")
         if response:
             print(response)

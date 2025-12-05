@@ -8,7 +8,7 @@ import sys
 from openocd_manager import OpenOCDManager
 from ui import select_target, run_interactive_loop
 
-VERSION = "0.003"
+VERSION = "0.004"
 
 
 def main():

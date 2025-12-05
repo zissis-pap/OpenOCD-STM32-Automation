@@ -1,14 +1,25 @@
 # OpenOCD Python Flasher
 
-Version: 0.001
+Version: 0.003
 
-A Python script for managing OpenOCD connections and performing common embedded development operations on STM32 microcontrollers.
+A modular Python application for managing OpenOCD connections and performing common embedded development operations on STM32 microcontrollers.
+
+## Project Structure
+
+```
+.
+├── main.py              # Entry point and main application logic
+├── openocd_manager.py   # OpenOCD process and communication management
+└── ui.py                # User interface (menus, prompts, interactive loop)
+```
 
 ## Features
 
+- Modular, maintainable architecture
 - Automatic OpenOCD process management
 - Telnet connection to OpenOCD
 - Interactive menu-driven interface
+- Support for 15 STM32 MCU families
 - Common operations:
   - Halt/Reset MCU
   - Erase flash memory
@@ -37,9 +48,14 @@ A Python script for managing OpenOCD connections and performing common embedded 
    # Download from https://openocd.org/
    ```
 
-2. Clone or download this script
+2. Clone or download all project files:
+   - `main.py`
+   - `openocd_manager.py`
+   - `ui.py`
 
-3. Make the script executable:
+3. Ensure all files are in the same directory
+
+4. Make the main script executable:
    ```bash
    chmod +x main.py
    ```

@@ -1,8 +1,8 @@
 # OpenOCD Python Flasher
 
-Version: 0.005
+Version: 0.006
 
-A modular Python application for managing OpenOCD connections and performing common embedded development operations on STM32 microcontrollers.
+A modular Python application for managing OpenOCD connections and performing common embedded development operations on STM32 microcontrollers. Supports both interactive mode and automated scripting via configuration files.
 
 ## Project Structure
 
@@ -12,15 +12,19 @@ A modular Python application for managing OpenOCD connections and performing com
 ├── openocd_manager.py   # OpenOCD process and communication management
 ├── ui.py                # User interface (menus, prompts, interactive loop)
 ├── colors.py            # Color utilities for terminal output
-└── requirements.txt     # Python dependencies
+├── config_parser.py     # Configuration file parser
+├── requirements.txt     # Python dependencies
+└── example_config.txt   # Example configuration file
 ```
 
 ## Features
 
+- **Two operation modes:**
+  - **Interactive mode:** Menu-driven interface for manual operations
+  - **Automated mode:** Configuration file support for scripted workflows
 - Modular, maintainable architecture
 - Automatic OpenOCD process management
 - Telnet connection to OpenOCD
-- Interactive menu-driven interface with color-coded output
 - Support for 15 STM32 MCU families
 - Automatic command retry with halt checking (up to 3 attempts)
 - Color-coded terminal output for better readability:
@@ -63,7 +67,9 @@ A modular Python application for managing OpenOCD connections and performing com
    - `openocd_manager.py`
    - `ui.py`
    - `colors.py`
+   - `config_parser.py`
    - `requirements.txt`
+   - `example_config.txt` (optional example)
 
 3. Install Python dependencies:
    ```bash
@@ -105,7 +111,11 @@ No additional configuration files are needed. Simply select your target when pro
 
 ## Usage
 
-Run the script:
+The application supports two modes of operation:
+
+### Interactive Mode
+
+Run the script without arguments for interactive mode:
 ```bash
 python3 main.py
 ```
@@ -142,6 +152,68 @@ After selecting your target, you'll see an interactive menu with the following o
 11. **Reconnect to OpenOCD** - Reconnect telnet session
 12. **Exit** - Clean up and exit
 
+### Automated Mode (Configuration File)
+
+For scripted/automated operations, you can use a configuration file:
+
+```bash
+python3 main.py config.txt
+```
+
+The configuration file uses a simple text format with two types of directives:
+
+#### Target Directive (Required)
+```
+target: stm32f4
+```
+
+Supported target values: `stm32f0`, `stm32f1`, `stm32f2`, `stm32f3`, `stm32f4`, `stm32f7`, `stm32g0`, `stm32g4`, `stm32h7`, `stm32l0`, `stm32l1`, `stm32l4`, `stm32l5`, `stm32wb`, `stm32wl`
+
+#### Command Directives (Optional)
+Commands are executed sequentially in the order they appear:
+
+```
+command: halt
+command: erase_flash
+command: flash firmware.bin
+command: verify firmware.bin
+command: reset_run
+```
+
+**Available commands:**
+- `halt` - Halt the MCU
+- `reset_halt` - Reset and halt the MCU
+- `reset_run` - Reset and run the MCU
+- `erase_flash` - Erase flash memory
+- `flash <filepath> [address]` - Flash firmware, optionally at a specific address
+  - Example: `flash build/firmware.bin`
+  - Example: `flash build/firmware.bin 0x08004000` (flash at bootloader offset)
+- `verify <filepath> [address]` - Verify firmware, optionally at a specific address
+  - Example: `verify build/firmware.bin`
+  - Example: `verify build/firmware.bin 0x08004000`
+- `read_memory <address> [count]` - Read memory (e.g., `read_memory 0x08000000 16`)
+- `write_memory <address> <value>` - Write memory (e.g., `write_memory 0x20000000 0x12345678`)
+- `custom <command>` - Send custom OpenOCD command (e.g., `custom targets`)
+
+**Example Configuration File:**
+```
+# Flash and verify firmware on STM32F4
+target: stm32f4
+
+# Prepare MCU
+command: halt
+command: erase_flash
+
+# Program and verify
+command: flash firmware.bin
+command: verify firmware.bin
+
+# Start execution
+command: reset_run
+```
+
+Comments (lines starting with `#`) and blank lines are ignored. See `example_config.txt` for a complete example.
+
 ### Automatic Halt Check and Retry Logic
 
 The script provides robust error handling for operations that require the MCU to be halted:
@@ -158,9 +230,9 @@ The script provides robust error handling for operations that require the MCU to
 - Detects OpenOCD failure patterns like "failed", "error", "target not halted", "unable to", etc.
 - This improves reliability when working with unstable connections or busy targets
 
-## Example Workflow
+## Example Workflows
 
-### Flashing Firmware
+### Interactive Mode: Flashing Firmware
 
 1. Start the script: `python3 main.py`
 2. Select target: Enter `1-15` based on your STM32 family (e.g., `5` for STM32F4, `10` for STM32L0)
@@ -170,17 +242,81 @@ The script provides robust error handling for operations that require the MCU to
 6. Select option `6` to verify
 7. Select option `3` to reset and run
 
-### Reading Memory
+### Interactive Mode: Reading Memory
 
 1. Select option `7` (Read Memory)
 2. Enter address: `0x08000000` (flash start on STM32)
 3. Enter count: `16` (read 16 words)
 
-### Writing to Memory
+### Interactive Mode: Writing to Memory
 
 1. Select option `8` (Write Memory)
 2. Enter address: `0x20000000` (RAM address)
 3. Enter value: `0x12345678`
+
+### Automated Mode: Complete Flash Workflow
+
+1. Create a configuration file `flash_config.txt`:
+```
+target: stm32l4
+command: halt
+command: erase_flash
+command: flash build/firmware.bin
+command: verify build/firmware.bin
+command: reset_run
+```
+
+2. Run with config file:
+```bash
+python3 main.py flash_config.txt
+```
+
+The script will automatically execute all commands and report the results.
+
+### Automated Mode: Bootloader + Application Flash
+
+For systems with bootloader and application firmware at different addresses:
+
+```
+target: stm32f4
+
+# Flash bootloader at base address
+command: halt
+command: erase_flash
+command: flash bootloader.bin 0x08000000
+command: verify bootloader.bin 0x08000000
+
+# Flash application at offset
+command: flash application.bin 0x08004000
+command: verify application.bin 0x08004000
+
+command: reset_run
+```
+
+This allows you to program firmware at specific memory locations, useful for:
+- Bootloader + application partitioning
+- Multi-region firmware updates
+- Factory programming scenarios
+
+### Automated Mode: CI/CD Integration
+
+Use configuration files in your build pipeline for automated testing:
+
+```bash
+# Build firmware
+make build
+
+# Flash and verify using config file
+python3 main.py deploy_config.txt
+
+# Check exit code
+if [ $? -eq 0 ]; then
+    echo "Deployment successful"
+else
+    echo "Deployment failed"
+    exit 1
+fi
+```
 
 ## Troubleshooting
 

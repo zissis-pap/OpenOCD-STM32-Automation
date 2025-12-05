@@ -150,9 +150,9 @@ class OpenOCDManager:
         # Common OpenOCD failure indicators
         failure_patterns = [
             "failed",
+            "Failed"
             "error",
             "target not halted",
-            "unable to",
             "cannot",
             "invalid"
         ]
@@ -226,30 +226,64 @@ class OpenOCDManager:
             print(success(response))
         return response
 
-    def flash_firmware(self, firmware_path):
-        """Flash firmware to MCU"""
+    def flash_firmware(self, firmware_path, address=0x08000000):
+        """Flash firmware to MCU
+
+        Args:
+            firmware_path: Path to firmware file
+            address: Optional memory address to program at (hex string or int)
+        """
         if not os.path.exists(firmware_path):
             print(error(f"Error: Firmware file '{firmware_path}' not found"))
             return None
 
-        print(info(f"Flashing firmware: {firmware_path}"))
+        # Build flash command
+        if address is not None:
+            # Convert address to hex string if it's an integer
+            if isinstance(address, int):
+                addr_str = f"0x{address:08x}"
+            else:
+                addr_str = address
+            print(info(f"Flashing firmware: {firmware_path} at address {addr_str}"))
+            flash_cmd = f"program {firmware_path} {addr_str}"
+        else:
+            print(info(f"Flashing firmware: {firmware_path}"))
+            flash_cmd = f"program {firmware_path} 0x08000000"
+
         # Ensure MCU is halted before flashing
         self._ensure_halted()
-        response = self.send_command(f"program {firmware_path} verify reset")
+        response = self.send_command(flash_cmd)
         if response:
             print(success(response))
         return response
 
-    def verify_firmware(self, firmware_path):
-        """Verify firmware"""
+    def verify_firmware(self, firmware_path, address=0x08000000):
+        """Verify firmware
+
+        Args:
+            firmware_path: Path to firmware file
+            address: Optional memory address offset for verification (hex string or int)
+        """
         if not os.path.exists(firmware_path):
             print(error(f"Error: Firmware file '{firmware_path}' not found"))
             return None
 
-        print(info(f"Verifying firmware: {firmware_path}"))
+        # Build verify command
+        if address is not None:
+            # Convert address to hex string if it's an integer
+            if isinstance(address, int):
+                addr_str = f"0x{address:08x}"
+            else:
+                addr_str = address
+            print(info(f"Verifying firmware: {firmware_path} at address {addr_str}"))
+            verify_cmd = f"verify_image {firmware_path} {addr_str}"
+        else:
+            print(info(f"Verifying firmware: {firmware_path}"))
+            verify_cmd = f"verify_image {firmware_path}"
+
         # Ensure MCU is halted before verifying
         self._ensure_halted()
-        response = self.send_command(f"verify_image {firmware_path}")
+        response = self.send_command(verify_cmd)
         if response:
             print(success(response))
         return response

@@ -1,0 +1,57 @@
+# OpenOCD Manager Configuration File
+# This file demonstrates the configuration file format for automated operations
+# Lines starting with # are comments and will be ignored
+
+# Target specification (required)
+# Supported targets: stm32f0, stm32f1, stm32f2, stm32f3, stm32f4, stm32f7,
+#                    stm32g0, stm32g4, stm32h7, stm32l0, stm32l1, stm32l4,
+#                    stm32l5, stm32wb, stm32wl
+target: stm32l4
+
+# Commands to execute (optional)
+# Commands are executed sequentially in the order they appear
+
+# Halt the MCU before operations
+command: halt
+
+# Erase flash memory
+command: erase_flash
+
+# Flash firmware (provide path to firmware file)
+# Syntax: flash <filepath> [address]
+# If address is not specified, firmware is flashed at its default location
+command: flash firmware.bin
+
+# Flash firmware at a specific address (e.g., bootloader offset)
+# command: flash firmware.bin 0x08000000
+
+# Verify the flashed firmware
+# Syntax: verify <filepath> [address]
+command: verify firmware.bin
+
+# Verify firmware at a specific address
+# command: verify firmware.bin 0x08000000
+
+# Reset and run the MCU
+command: reset_run
+
+# Additional command examples (commented out):
+
+# Reset and halt
+# command: reset_halt
+
+# Read memory (address [count])
+# command: read_memory 0x08000000 16
+
+# Write memory (address value)
+# command: write_memory 0x20000000 0x12345678
+
+# Send custom OpenOCD command
+# command: custom targets
+
+# Another complete workflow example:
+# command: halt
+# command: erase_flash
+# command: flash build/my_firmware.hex
+# command: verify build/my_firmware.hex
+# command: reset_run

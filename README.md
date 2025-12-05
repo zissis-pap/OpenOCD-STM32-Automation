@@ -1,6 +1,6 @@
 # OpenOCD Python Flasher
 
-Version: 0.004
+Version: 0.005
 
 A modular Python application for managing OpenOCD connections and performing common embedded development operations on STM32 microcontrollers.
 
@@ -10,7 +10,9 @@ A modular Python application for managing OpenOCD connections and performing com
 .
 ├── main.py              # Entry point and main application logic
 ├── openocd_manager.py   # OpenOCD process and communication management
-└── ui.py                # User interface (menus, prompts, interactive loop)
+├── ui.py                # User interface (menus, prompts, interactive loop)
+├── colors.py            # Color utilities for terminal output
+└── requirements.txt     # Python dependencies
 ```
 
 ## Features
@@ -18,9 +20,15 @@ A modular Python application for managing OpenOCD connections and performing com
 - Modular, maintainable architecture
 - Automatic OpenOCD process management
 - Telnet connection to OpenOCD
-- Interactive menu-driven interface
+- Interactive menu-driven interface with color-coded output
 - Support for 15 STM32 MCU families
 - Automatic command retry with halt checking (up to 3 attempts)
+- Color-coded terminal output for better readability:
+  - Green for success messages
+  - Red for errors
+  - Yellow for warnings and prompts
+  - Cyan for information
+  - Blue for menu options
 - Common operations:
   - Halt/Reset MCU
   - Erase flash memory
@@ -33,6 +41,7 @@ A modular Python application for managing OpenOCD connections and performing com
 
 - Python 3.6+
 - OpenOCD installed and in PATH
+- Python package: `colorama` (for colored terminal output)
 - Target hardware connected via debug probe (ST-Link, J-Link, etc.)
 
 ## Installation
@@ -53,10 +62,22 @@ A modular Python application for managing OpenOCD connections and performing com
    - `main.py`
    - `openocd_manager.py`
    - `ui.py`
+   - `colors.py`
+   - `requirements.txt`
 
-3. Ensure all files are in the same directory
+3. Install Python dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-4. Make the main script executable:
+   Or install manually:
+   ```bash
+   pip install colorama
+   ```
+
+4. Ensure all files are in the same directory
+
+5. Make the main script executable (Linux/macOS):
    ```bash
    chmod +x main.py
    ```
@@ -180,12 +201,6 @@ The script provides robust error handling for operations that require the MCU to
 - Ensure the MCU is halted before flashing
 - Check that the firmware file path is correct
 - Verify the firmware is compatible with your target
-
-## Python Version Note
-
-This script uses `telnetlib` which is deprecated in Python 3.11+ and removed in Python 3.13+. If you're using Python 3.13+, you may need to:
-- Use Python 3.12 or earlier, or
-- Replace `telnetlib` with an alternative like `socket` or a third-party library
 
 ## License
 

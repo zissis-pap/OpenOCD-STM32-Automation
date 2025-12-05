@@ -7,14 +7,15 @@ Main entry point for the application
 import sys
 from openocd_manager import OpenOCDManager
 from ui import select_target, run_interactive_loop
+from colors import header, error, success
 
-VERSION = "0.004"
+VERSION = "0.005"
 
 
 def main():
     """Main application entry point"""
-    print(f"OpenOCD Manager v{VERSION}")
-    print("="*50)
+    print(header(f"OpenOCD Manager v{VERSION}"))
+    print(header("="*50))
 
     # Hardcoded interface configuration
     interface_cfg = "interface/stlink.cfg"
@@ -30,12 +31,12 @@ def main():
 
     # Start OpenOCD
     if not manager.start_openocd():
-        print("Failed to start OpenOCD. Exiting...")
+        print(error("Failed to start OpenOCD. Exiting..."))
         return 1
 
     # Connect via telnet
     if not manager.connect_telnet():
-        print("Failed to connect to OpenOCD. Stopping...")
+        print(error("Failed to connect to OpenOCD. Stopping..."))
         manager.stop_openocd()
         return 1
 
@@ -43,9 +44,9 @@ def main():
     try:
         run_interactive_loop(manager)
     finally:
-        print("\nCleaning up...")
+        print(header("\nCleaning up..."))
         manager.stop_openocd()
-        print("Goodbye!")
+        print(success("Goodbye!"))
 
     return 0
 

@@ -4,6 +4,7 @@ import subprocess
 import socket
 import time
 import os
+from colors import error, success, info, warning
 
 
 class OpenOCDManager:
@@ -19,7 +20,7 @@ class OpenOCDManager:
     def start_openocd(self):
         """Start OpenOCD process"""
         if self.process and self.process.poll() is None:
-            print("OpenOCD is already running")
+            print(info("OpenOCD is already running"))
             return True
 
         cmd = ["openocd"]
@@ -29,7 +30,7 @@ class OpenOCDManager:
             cmd.extend(["-f", self.target_cfg])
 
         try:
-            print(f"Starting OpenOCD with command: {' '.join(cmd)}")
+            print(info(f"Starting OpenOCD with command: {' '.join(cmd)}"))
             self.process = subprocess.Popen(
                 cmd,
                 stdout=subprocess.PIPE,
@@ -40,26 +41,26 @@ class OpenOCDManager:
 
             if self.process.poll() is not None:
                 _, stderr = self.process.communicate()
-                print(f"OpenOCD failed to start: {stderr}")
+                print(error(f"OpenOCD failed to start: {stderr}"))
                 return False
 
-            print("OpenOCD started successfully")
+            print(success("OpenOCD started successfully"))
             return True
         except FileNotFoundError:
-            print("Error: openocd command not found. Please install OpenOCD.")
+            print(error("Error: openocd command not found. Please install OpenOCD."))
             return False
         except Exception as e:
-            print(f"Error starting OpenOCD: {e}")
+            print(error(f"Error starting OpenOCD: {e}"))
             return False
 
     def connect_telnet(self):
         """Connect to OpenOCD via telnet"""
         if self.connected:
-            print("Already connected to OpenOCD")
+            print(info("Already connected to OpenOCD"))
             return True
 
         try:
-            print(f"Connecting to OpenOCD on localhost:{self.port}...")
+            print(info(f"Connecting to OpenOCD on localhost:{self.port}..."))
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.settimeout(5)
             self.socket.connect(("localhost", self.port))
@@ -67,10 +68,10 @@ class OpenOCDManager:
             # Read initial prompt
             self._read_until(b">", timeout=2)
             self.connected = True
-            print("Connected to OpenOCD successfully")
+            print(success("Connected to OpenOCD successfully"))
             return True
         except Exception as e:
-            print(f"Error connecting to OpenOCD: {e}")
+            print(error(f"Error connecting to OpenOCD: {e}"))
             self.connected = False
             if self.socket:
                 self.socket.close()
@@ -103,7 +104,7 @@ class OpenOCDManager:
     def _send_command_raw(self, command):
         """Send command to OpenOCD without retry logic"""
         if not self.connected:
-            print("Not connected to OpenOCD")
+            print(error("Not connected to OpenOCD"))
             return None
 
         try:
@@ -113,7 +114,7 @@ class OpenOCDManager:
             response = response.rsplit('>', 1)[0].strip()
             return response
         except Exception as e:
-            print(f"Error sending command: {e}")
+            print(error(f"Error sending command: {e}"))
             return None
 
     def _check_if_halted(self):
@@ -135,7 +136,7 @@ class OpenOCDManager:
     def _ensure_halted(self):
         """Ensure MCU is halted, halt it if not"""
         if not self._check_if_halted():
-            print("MCU not halted, attempting to halt...")
+            print(warning("MCU not halted, attempting to halt..."))
             self._send_command_raw("halt")
             time.sleep(0.5)
 
@@ -179,7 +180,7 @@ class OpenOCDManager:
 
             # Command failed
             if attempt < max_retries - 1:  # Don't retry on last attempt
-                print(f"Command failed, retrying ({attempt + 2}/{max_retries})...")
+                print(warning(f"Command failed, retrying ({attempt + 2}/{max_retries})..."))
 
                 # Check if MCU is halted before retrying (except for halt/reset commands)
                 if check_halt and command not in ["halt", "reset halt", "reset run"]:
@@ -187,104 +188,104 @@ class OpenOCDManager:
 
                 time.sleep(0.5)  # Brief delay before retry
             else:
-                print(f"Command failed after {max_retries} attempts")
+                print(error(f"Command failed after {max_retries} attempts"))
 
         return response
 
     def halt(self):
         """Halt the MCU"""
-        print("Halting MCU...")
+        print(info("Halting MCU..."))
         response = self.send_command("halt", check_halt=False)
         if response:
-            print(response)
+            print(success(response))
         return response
 
     def reset_halt(self):
         """Reset and halt the MCU"""
-        print("Resetting and halting MCU...")
+        print(info("Resetting and halting MCU..."))
         response = self.send_command("reset halt", check_halt=False)
         if response:
-            print(response)
+            print(success(response))
         return response
 
     def reset_run(self):
         """Reset and run the MCU"""
-        print("Resetting and running MCU...")
+        print(info("Resetting and running MCU..."))
         response = self.send_command("reset run", check_halt=False)
         if response:
-            print(response)
+            print(success(response))
         return response
 
     def erase_flash(self):
         """Erase flash memory"""
-        print("Erasing flash memory...")
+        print(warning("Erasing flash memory..."))
         # Ensure MCU is halted before erasing
         self._ensure_halted()
         response = self.send_command("flash erase_sector 0 0 last")
         if response:
-            print(response)
+            print(success(response))
         return response
 
     def flash_firmware(self, firmware_path):
         """Flash firmware to MCU"""
         if not os.path.exists(firmware_path):
-            print(f"Error: Firmware file '{firmware_path}' not found")
+            print(error(f"Error: Firmware file '{firmware_path}' not found"))
             return None
 
-        print(f"Flashing firmware: {firmware_path}")
+        print(info(f"Flashing firmware: {firmware_path}"))
         # Ensure MCU is halted before flashing
         self._ensure_halted()
         response = self.send_command(f"program {firmware_path} verify reset")
         if response:
-            print(response)
+            print(success(response))
         return response
 
     def verify_firmware(self, firmware_path):
         """Verify firmware"""
         if not os.path.exists(firmware_path):
-            print(f"Error: Firmware file '{firmware_path}' not found")
+            print(error(f"Error: Firmware file '{firmware_path}' not found"))
             return None
 
-        print(f"Verifying firmware: {firmware_path}")
+        print(info(f"Verifying firmware: {firmware_path}"))
         # Ensure MCU is halted before verifying
         self._ensure_halted()
         response = self.send_command(f"verify_image {firmware_path}")
         if response:
-            print(response)
+            print(success(response))
         return response
 
     def read_memory(self, address, count=1):
         """Read memory at address"""
-        print(f"Reading memory at 0x{address:08x} (count: {count})...")
+        print(info(f"Reading memory at 0x{address:08x} (count: {count})..."))
         response = self.send_command(f"mdw 0x{address:08x} {count}")
         if response:
-            print(response)
+            print(info(response))
         return response
 
     def write_memory(self, address, value):
         """Write value to memory address"""
-        print(f"Writing 0x{value:08x} to address 0x{address:08x}...")
+        print(info(f"Writing 0x{value:08x} to address 0x{address:08x}..."))
         # Ensure MCU is halted before writing to memory
         self._ensure_halted()
         response = self.send_command(f"mww 0x{address:08x} 0x{value:08x}")
         if response:
-            print(response)
+            print(success(response))
         return response
 
     def get_target_info(self):
         """Get target information"""
-        print("Getting target information...")
+        print(info("Getting target information..."))
         response = self.send_command("targets")
         if response:
-            print(response)
+            print(info(response))
         return response
 
     def custom_command(self, command):
         """Send custom OpenOCD command"""
-        print(f"Sending command: {command}")
+        print(info(f"Sending command: {command}"))
         response = self.send_command(command)
         if response:
-            print(response)
+            print(info(response))
         return response
 
     def disconnect(self):
@@ -292,7 +293,7 @@ class OpenOCDManager:
         if self.socket:
             try:
                 self.socket.close()
-                print("Disconnected from OpenOCD")
+                print(success("Disconnected from OpenOCD"))
             except:
                 pass
             self.connected = False
@@ -304,11 +305,11 @@ class OpenOCDManager:
         self.disconnect()
 
         if self.process and self.process.poll() is None:
-            print("Stopping OpenOCD...")
+            print(info("Stopping OpenOCD..."))
             self.process.terminate()
             try:
                 self.process.wait(timeout=5)
             except subprocess.TimeoutExpired:
                 self.process.kill()
-            print("OpenOCD stopped")
+            print(success("OpenOCD stopped"))
         self.process = None

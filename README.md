@@ -1,4 +1,4 @@
-# OpenOCD Python Flasher
+# OpenOCD-STM32-Automation
 
 Version: 0.008
 

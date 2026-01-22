@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-OpenOCD Python Flasher
+OpenOCD-STM32-Automation
 Main entry point for the application
 """
 

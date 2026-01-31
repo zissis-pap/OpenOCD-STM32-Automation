@@ -1,23 +1,30 @@
-# OpenOCD-STM32-Automation
+# OpenOCD-STM32-Automation 🔧
 
-Version: 0.008
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Python Version](https://img.shields.io/badge/python-3.6+-blue.svg)](https://www.python.org/downloads/)
+[![Version](https://img.shields.io/badge/version-0.008-green.svg)](https://github.com/yourusername/OpenOCD-STM32-Automation)
+[![Platform](https://img.shields.io/badge/platform-linux%20%7C%20macos%20%7C%20windows-lightgrey.svg)](https://github.com/yourusername/OpenOCD-STM32-Automation)
 
 A modular Python application for managing OpenOCD connections and performing common embedded development operations on STM32 microcontrollers. Supports both interactive mode and automated scripting via configuration files.
 
-## Project Structure
+## Table of Contents 📑
 
-```
-.
-├── main.py              # Entry point and main application logic
-├── openocd_manager.py   # OpenOCD process and communication management
-├── ui.py                # User interface (menus, prompts, interactive loop)
-├── colors.py            # Color utilities for terminal output
-├── config_parser.py     # Configuration file parser
-├── requirements.txt     # Python dependencies
-└── example_config.txt   # Example configuration file
-```
+- [Features](#features)
+- [Supported Devices](#supported-devices)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Usage](#usage)
+  - [Interactive Mode](#interactive-mode)
+  - [Automated Mode](#automated-mode-configuration-file)
+- [Example Workflows](#example-workflows)
+- [Project Structure](#project-structure)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [License](#license)
+- [Acknowledgments](#acknowledgments)
 
-## Features
+## Features ✨
 
 - **Two operation modes:**
   - **Interactive mode:** Menu-driven interface for manual operations
@@ -31,13 +38,13 @@ A modular Python application for managing OpenOCD connections and performing com
   - File existence validation before flash/verify operations
   - Proper exception handling with clear error messages
   - Automatic flash erase on failure in automated mode to prevent bricked devices
-- Color-coded terminal output for better readability:
+- **Color-coded terminal output for better readability:**
   - Green for success messages
   - Red for errors
   - Yellow for warnings and prompts
   - Cyan for information
   - Blue for menu options
-- Common operations:
+- **Common operations:**
   - Halt/Reset MCU
   - Erase flash memory
   - Flash firmware
@@ -45,14 +52,33 @@ A modular Python application for managing OpenOCD connections and performing com
   - Read/Write memory locations
   - Send custom OpenOCD commands
 
-## Requirements
+## Supported Devices 🎯
+
+This tool supports **15 STM32 microcontroller families** across multiple series:
+
+**F Series (Performance):**
+- STM32F0, F1, F2, F3, F4, F7
+
+**G Series (Mainstream):**
+- STM32G0, G4
+
+**H Series (High Performance):**
+- STM32H7
+
+**L Series (Ultra Low Power):**
+- STM32L0, L1, L4, L5
+
+**Wireless Series:**
+- STM32WB (Bluetooth/802.15.4), WL (LoRa/Sub-GHz)
+
+## Requirements 📋
 
 - Python 3.6+
 - OpenOCD installed and in PATH
 - Python package: `colorama` (for colored terminal output)
 - Target hardware connected via debug probe (ST-Link, J-Link, etc.)
 
-## Installation
+## Installation 💿
 
 1. Install OpenOCD:
    ```bash
@@ -92,32 +118,17 @@ A modular Python application for managing OpenOCD connections and performing com
    chmod +x main.py
    ```
 
-## Configuration
+## Configuration ⚙️
 
-The script is pre-configured for ST-Link debug probe and supports the following STM32 targets:
+The script is pre-configured for **ST-Link debug probe** and supports 15 STM32 target families.
 
-**F Series:**
-- STM32F0, F1, F2, F3, F4, F7
+No additional configuration files are needed. Simply select your target when prompted during script startup. 🎯
 
-**G Series:**
-- STM32G0, G4
-
-**H Series:**
-- STM32H7
-
-**L Series:**
-- STM32L0, L1, L4, L5
-
-**Wireless Series:**
-- STM32WB, WL
-
-No additional configuration files are needed. Simply select your target when prompted during script startup.
-
-## Usage
+## Usage 🚀
 
 The application supports two modes of operation:
 
-### Interactive Mode
+### 🖥️ Interactive Mode
 
 Run the script without arguments for interactive mode:
 ```bash
@@ -156,7 +167,7 @@ After selecting your target, you'll see an interactive menu with the following o
 11. **Reconnect to OpenOCD** - Reconnect telnet session
 12. **Exit** - Clean up and exit
 
-### Automated Mode (Configuration File)
+### ⚙️ Automated Mode (Configuration File)
 
 For scripted/automated operations, you can use a configuration file:
 
@@ -248,9 +259,9 @@ The script provides robust error handling for operations that require the MCU to
 - Proper exception handling (`FileNotFoundError`) ensures errors are caught early before attempting communication with the device
 - Helps prevent wasted time on operations that cannot succeed due to missing files
 
-## Example Workflows
+## Example Workflows 💡
 
-### Interactive Mode: Flashing Firmware
+### 📲 Interactive Mode: Flashing Firmware
 
 1. Start the script: `python3 main.py`
 2. Select target: Enter `1-15` based on your STM32 family (e.g., `5` for STM32F4, `10` for STM32L0)
@@ -260,19 +271,19 @@ The script provides robust error handling for operations that require the MCU to
 6. Select option `6` to verify
 7. Select option `3` to reset and run
 
-### Interactive Mode: Reading Memory
+### 📖 Interactive Mode: Reading Memory
 
 1. Select option `7` (Read Memory)
 2. Enter address: `0x08000000` (flash start on STM32)
 3. Enter count: `16` (read 16 words)
 
-### Interactive Mode: Writing to Memory
+### ✍️ Interactive Mode: Writing to Memory
 
 1. Select option `8` (Write Memory)
 2. Enter address: `0x20000000` (RAM address)
 3. Enter value: `0x12345678`
 
-### Automated Mode: Complete Flash Workflow
+### 🤖 Automated Mode: Complete Flash Workflow
 
 1. Create a configuration file `flash_config.txt`:
 ```
@@ -291,7 +302,7 @@ python3 main.py flash_config.txt
 
 The script will automatically execute all commands and report the results.
 
-### Automated Mode: Bootloader + Application Flash
+### 🔀 Automated Mode: Bootloader + Application Flash
 
 For systems with bootloader and application firmware at different addresses:
 
@@ -316,7 +327,7 @@ This allows you to program firmware at specific memory locations, useful for:
 - Multi-region firmware updates
 - Factory programming scenarios
 
-### Automated Mode: CI/CD Integration
+### 🔄 Automated Mode: CI/CD Integration
 
 Use configuration files in your build pipeline for automated testing:
 
@@ -336,27 +347,65 @@ else
 fi
 ```
 
-## Troubleshooting
+## Troubleshooting 🔍
 
-### OpenOCD fails to start
+### ❌ OpenOCD fails to start
 
 - Check that OpenOCD is installed: `openocd --version`
 - Ensure your ST-Link debug probe is connected
 - Verify you selected the correct target for your MCU
 
-### Cannot connect via telnet
+### 🔌 Cannot connect via telnet
 
 - Check that OpenOCD started successfully
 - Verify the telnet port (default: 4444)
 - Try connecting manually: `telnet localhost 4444`
 
-### Flash/Programming errors
+### ⚠️ Flash/Programming errors
 
 - Ensure the MCU is halted before flashing (the script will attempt this automatically)
 - Check that the firmware file path is correct - the script will now report "Firmware file 'filename' not found" if the file doesn't exist
 - Verify the firmware is compatible with your target
 - Ensure the file path is correct relative to where you're running the script from
 
-## License
+## Project Structure 📁
 
-GPL-3.0
+```
+.
+├── main.py              # Entry point and main application logic
+├── openocd_manager.py   # OpenOCD process and communication management
+├── ui.py                # User interface (menus, prompts, interactive loop)
+├── colors.py            # Color utilities for terminal output
+├── config_parser.py     # Configuration file parser
+├── requirements.txt     # Python dependencies
+├── example_config.txt   # Example configuration file
+└── LICENSE              # GPL-3.0 license file
+```
+
+## Contributing 🤝
+
+Contributions are welcome! Here's how you can help:
+
+1. **Fork the repository**
+2. **Create a feature branch** (`git checkout -b feature/amazing-feature`)
+3. **Make your changes**
+4. **Test thoroughly** with your target hardware
+5. **Commit your changes** (`git commit -m 'Add some amazing feature'`)
+6. **Push to the branch** (`git push origin feature/amazing-feature`)
+7. **Open a Pull Request**
+
+Please ensure your code follows the existing style and includes appropriate error handling.
+
+## License 📄
+
+This project is licensed under the **GNU General Public License v3.0** - see the [LICENSE](LICENSE) file for details.
+
+Copyright (C) 2026 - Zissis Papadopoulos
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+## Acknowledgments 🙏
+
+- Thanks to the [OpenOCD](https://openocd.org/) project for providing the excellent debugging and programming tool
+- STMicroelectronics for their comprehensive STM32 microcontroller family
+
